@@ -256,14 +256,10 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
         {
             if (bodies != null)
             {
-                    // Draw a transparent background to set the render size
-                    //dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     foreach (Body body in bodies)
                     {
                         if (body.IsTracked)
                         {
-
-                            // this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
 

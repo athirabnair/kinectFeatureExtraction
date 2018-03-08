@@ -795,10 +795,6 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 }
 
                             }
-                            else if(textFlag.Text == "Ready!")
-                            {
-
-                            }
                         }
                         else if (startRecording && textFlag.Text != "Stopped.")
                         {
