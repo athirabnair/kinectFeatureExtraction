@@ -205,11 +205,11 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                     dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     int penIndex = 0;
                     foreach (Body body in bodies)
-                    {                        
+                    {
                         Pen drawPen = this.bodyColors[penIndex++];
                         if (body.IsTracked)
                         {
-                          
+
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -235,62 +235,104 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
-                            float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
-                           
 
-                                if (spineBaseDepth != 0 && spineBaseDepth < 1.3)
-                            {
-                                Console.WriteLine("NOT ALIGNED");
-                                Pen drawPenOverlay = this.bodyColors[(penIndex+1)%6];
-                                Dictionary<JointType, Point> newJointPoints = new Dictionary<JointType, Point>();
-                                    // Display the formatted text string.
-                                    /*
-                                    FormattedText formattedText = new FormattedText(
-                                        "Move closer/farther away from the Kinect!",
-                                        CultureInfo.GetCultureInfo("en-us"),
-                                        FlowDirection.LeftToRight,
-                                        new Typeface("Verdana"),
-                                        32,
-                                        Brushes.Black);
-                                    dc.DrawText(formattedText, new Point(0, 0)); */
-                                Dictionary<JointType, Joint> jointsOverlay = new Dictionary<JointType, Joint>();
-                                float optimalDepth = (float) 1.4;
-                                float ratio = optimalDepth / spineBaseDepth;
-                                //Console.WriteLine(ratio);
-
-                                foreach (JointType jointType in joints.Keys)
-                                {
-                                    
-                             
-                                    Joint newJoint = joints[jointType];
-                                    var newPosition = new CameraSpacePoint
-                                    {
-                                        X = joints[jointType].Position.X * ratio,
-                                        Y = joints[jointType].Position.Y * ratio,
-                                        Z = spineBaseDepth
-                                    };
-                                    
-                                    if (newPosition.Z < 0)
-                                    {
-                                        newPosition.Z = InferredZPositionClamp;
-                                    }
-                                    newJoint.Position = newPosition;
-                                    DepthSpacePoint depthSpacePointOverlay = this.coordinateMapper.MapCameraPointToDepthSpace(newPosition);
-                                    newJointPoints[jointType] = new Point(depthSpacePointOverlay.X, depthSpacePointOverlay.Y);
-                                    //Console.WriteLine("OLD JOINT POSITIONS ***** :::: {0},{1},{2}", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
-                                    //Console.WriteLine("NEW JOINT POSITIONS ***** :::: {0},{1},{2},{3}", newJoint.Position.X, newJoint.Position.Y, newJoint.Position.Z, jointType.ToString());
-                                    jointsOverlay.Add(jointType, newJoint);
-                                }
-                               
-
-                                this.DrawBody(jointsOverlay, newJointPoints, dc, drawPenOverlay);
-                            }
-
+                            // CALIBRATION 
+                            this.CalibrationCheck(bodies, dc);
                         }
                     }
 
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if the calibration is done for the body 
+        /// Called in the beginning before recording, and also to check if calibration is off at any point
+        /// </summary>
+        /// <param name="bodies">Array of bodies to update</param>
+        public void CalibrationCheck(Body[] bodies, DrawingContext dc)
+        {
+            if (bodies != null)
+            {
+                    // Draw a transparent background to set the render size
+                    //dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                    foreach (Body body in bodies)
+                    {
+                        if (body.IsTracked)
+                        {
+
+                            // this.DrawClippedEdges(body, dc);
+
+                            IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+
+                            // CALIBRATION 
+                            float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
+                            if (spineBaseDepth != 0 && (spineBaseDepth < 1.3 || spineBaseDepth > 1.5))
+                            {
+                                if (spineBaseDepth > 1.5)
+                                {
+                                    Console.WriteLine("NOT ALIGNED - TOO FAR");
+                                    // Display the formatted text string.
+
+                                    FormattedText formattedText = new FormattedText(
+                                        "Not aligned. Move away from the Kinect!",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        24,
+                                        Brushes.Aquamarine);
+                                    dc.DrawText(formattedText, new Point(20, 20));
+                                }
+                                else
+                                {
+                                    Console.WriteLine("NOT ALIGNED - TOO CLOSE");
+                                    // Display the formatted text string.
+
+                                    FormattedText formattedText = new FormattedText(
+                                        "Not aligned. Move closer to the Kinect!",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        24,
+                                        Brushes.Aquamarine);
+                                    dc.DrawText(formattedText, new Point(20, 20));
+                                }
+
+                                Pen drawPenOverlay = new Pen(Brushes.BurlyWood, 6);
+                                Dictionary<JointType, Point> jointPointsOverlay = new Dictionary<JointType, Point>();
+
+                                Dictionary<JointType, Joint> jointsOverlay = new Dictionary<JointType, Joint>();
+                                float optimalDepth = (float)1.4;
+                                float scalingRatio = optimalDepth / spineBaseDepth;
+                                //Console.WriteLine(scalingRatio);
+
+                                foreach (JointType jointType in joints.Keys)
+                                {
+
+
+                                    Joint newJoint = joints[jointType];
+                                    var newPosition = new CameraSpacePoint
+                                    {
+                                        X = joints[jointType].Position.X * scalingRatio,
+                                        Y = joints[jointType].Position.Y * scalingRatio,
+                                        Z = spineBaseDepth
+                                    };
+
+                                    newJoint.Position = newPosition;
+                                    DepthSpacePoint depthSpacePointOverlay = this.coordinateMapper.MapCameraPointToDepthSpace(newPosition);
+                                    jointPointsOverlay[jointType] = new Point(depthSpacePointOverlay.X, depthSpacePointOverlay.Y);
+                                    //Console.WriteLine("OLD JOINT POSITIONS ***** :::: {0},{1},{2}", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
+                                    //Console.WriteLine("NEW JOINT POSITIONS ***** :::: {0},{1},{2},{3}", newJoint.Position.X, newJoint.Position.Y, newJoint.Position.Z, jointType.ToString());
+                                    jointsOverlay.Add(jointType, newJoint);
+                                }
+
+
+                                this.DrawBody(jointsOverlay, jointPointsOverlay, dc, drawPenOverlay);
+                            }
+                        }
+                    
                 }
             }
         }

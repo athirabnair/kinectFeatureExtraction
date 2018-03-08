@@ -765,12 +765,6 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             rectangleFlag.Fill = rSolidColor;
                             if (textFlag.Text == "Stopped.")
                             {
-                                //this.kinectBodyViewbox.Child = this.drawingCanvas;
-                                //using(DrawingContext dc = this.drawingGroup.Open())
-                                //{
-                                 //   dc.DrawRectangle(Brushes.Red, null, new Rect(0, 0, this., 100));
-                                  
-                                //}
 
                                 //First time, when beginning
                                 textFlag.Text = "Ready!";
@@ -799,6 +793,10 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     textFlag.Text = "Saved data, and ready!";
                                     raisedLeftHand = false;
                                 }
+
+                            }
+                            else if(textFlag.Text == "Ready!")
+                            {
 
                             }
                         }

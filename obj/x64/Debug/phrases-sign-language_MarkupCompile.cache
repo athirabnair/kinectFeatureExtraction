@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\Users\aslr\Documents\kmdGit\obj\x64\Debug\
+C:\Users\aslr\Documents\kinectFeatureExtraction\obj\x64\Debug\
 Microsoft.Samples.Kinect.DiscreteGestureBasics
 none
 false
 DEBUG;TRACE
-C:\Users\aslr\Documents\kmdGit\App.xaml
+C:\Users\aslr\Documents\kinectFeatureExtraction\App.xaml
 11151548125
 6-203301676
 12-374355945
-72-1330075989
+72635991860
 MainWindow.xaml;
 
 False
