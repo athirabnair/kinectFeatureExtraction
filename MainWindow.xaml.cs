@@ -122,10 +122,12 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
         private String phrase_name = "Alligator_behind_chair";
         //public static readonly string dataWritePath = @"F:\CopyCat\data\";
-        public static readonly string dataWritePath = @"C:\Users\aslr\Documents\datakmd\";
+        public static readonly string dataWritePath = @"C:\Users\aslr\Documents\data\test\";
         /// <summary>
         /// Initializes a new instance of the MainWindow class
         /// </summary>
+        /// 
+
         public MainWindow()
         {
             // only one sensor is currently supported
@@ -275,7 +277,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
             BitmapImage image = new BitmapImage();
             image.BeginInit();
             image.UriSource = new Uri(System.IO.Path.Combine(
-                @"C:\Users\aslr\Documents\GitHub\SignLanguageRecognition\phrase-sampler-3.0\phrase_images", cleanedPhrase));
+                @"C:\Users\aslr\Documents\kinectFeatureExtraction\phrase_images", cleanedPhrase));
             image.EndInit();
             phraseImage.Source = image;
 
@@ -514,15 +516,17 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                     if ((!paused && startMode) || scrClicked)
                     {
                         widthD = frame.FrameDescription.Width;
-                        //Console.WriteLine("!!!!!!!!!!!!!!!!!!%$^&***********************************" + width);
+                        //Console.WriteLine("!!!!!!!!!!!!!!!!!!%$^&***********************************" + widthD);
                         heightD = frame.FrameDescription.Height;
-                        //Console.WriteLine("!!!!!!!!!!!!!!!!!!%$^&****************************HIEIGHT*" + height);
+                        //Console.WriteLine("!!!!!!!!!!!!!!!!!!%$^&****************************HEIGHT*" + heightD);
 
                         PixelFormat format = PixelFormats.Bgr32;
 
                         minDepth = frame.DepthMinReliableDistance;
                         maxDepth = frame.DepthMaxReliableDistance;
 
+                        Console.WriteLine(" Min Depth ::::: " + minDepth);
+                        Console.WriteLine(" Max Depth ::::: " + maxDepth);
                         ushort[] pixelData = new ushort[widthD * heightD];
                         //byte[] pixels = new byte[width * height * (format.BitsPerPixel + 7) / 8];
                         dimension = widthD * heightD * (format.BitsPerPixel + 7) / 8;
@@ -697,6 +701,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                     // The first time GetAndRefreshBodyData is called, Kinect will allocate each Body in the array.
                     // As long as those body objects are not disposed and not set to null in the array,
                     // those body objects will be re-used.
+       
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
                 }
@@ -725,7 +730,10 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                     Joint spinebase = body.Joints[JointType.SpineBase];     //0
                     Joint spinemid = body.Joints[JointType.SpineMid];
 
-                    if(!paused)
+                    /*if(spinebase.Position.X != 0 && spinebase.Position.Y != 0){
+                    Console.WriteLine("JOINT POSITIONS ***** :::: {0},{1},{2}", spinebase.Position.X, spinebase.Position.Y, spinebase.Position.Z);
+                    }*/
+                    if (!paused)
                     {
                         double spineDifferenceY = Math.Abs(spinebase.Position.Y - spinemid.Position.Y);
                         double distFromBase = (spineDifferenceY * 2.0) / 3.0; //Take 2/3rds the distance from the spine base.
@@ -757,6 +765,13 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             rectangleFlag.Fill = rSolidColor;
                             if (textFlag.Text == "Stopped.")
                             {
+                                //this.kinectBodyViewbox.Child = this.drawingCanvas;
+                                //using(DrawingContext dc = this.drawingGroup.Open())
+                                //{
+                                 //   dc.DrawRectangle(Brushes.Red, null, new Rect(0, 0, this., 100));
+                                  
+                                //}
+
                                 //First time, when beginning
                                 textFlag.Text = "Ready!";
                             }
@@ -765,7 +780,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 if (!raisedLeftHand)
                                 {
                                     //Erase the session data
-                                    Console.WriteLine("NOT recordig!!!");
+                                    Console.WriteLine("NOT recording!!!");
                                     this.jointDataWriter.deleteLastSample(session_number); //clientInterface.sendData("delete");
                                     phrase_indices[current_phrase_index]--;
                                     colorQueue.Clear();
@@ -1124,7 +1139,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
             BitmapImage image = new BitmapImage();
             image.BeginInit();
             image.UriSource = new Uri(System.IO.Path.Combine(
-                @"C:\Users\aslr\Documents\GitHub\SignLanguageRecognition\phrase-sampler-3.0\phrase_images", cleanedPhrase));
+                @"C:\Users\aslr\Documents\kinectFeatureExtraction\phrase_images", cleanedPhrase));
             image.EndInit();
             phraseImage.Source = image;
 

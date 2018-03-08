@@ -11,6 +11,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
     using System.Windows;
     using System.Windows.Media;
     using Microsoft.Kinect;
+    using System.Globalization;
 
     /// <summary>
     /// Visualizes the Kinect Body stream for display in the UI
@@ -203,12 +204,12 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                     // Draw a transparent background to set the render size
                     dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     int penIndex = 0;
-
                     foreach (Body body in bodies)
                     {                        
                         Pen drawPen = this.bodyColors[penIndex++];
                         if (body.IsTracked)
                         {
+                          
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -234,6 +235,57 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+                            float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
+                           
+
+                                if (spineBaseDepth != 0 && spineBaseDepth < 1.3)
+                            {
+                                Console.WriteLine("NOT ALIGNED");
+                                Pen drawPenOverlay = this.bodyColors[(penIndex+1)%6];
+                                Dictionary<JointType, Point> newJointPoints = new Dictionary<JointType, Point>();
+                                    // Display the formatted text string.
+                                    /*
+                                    FormattedText formattedText = new FormattedText(
+                                        "Move closer/farther away from the Kinect!",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        32,
+                                        Brushes.Black);
+                                    dc.DrawText(formattedText, new Point(0, 0)); */
+                                Dictionary<JointType, Joint> jointsOverlay = new Dictionary<JointType, Joint>();
+                                float optimalDepth = (float) 1.4;
+                                float ratio = optimalDepth / spineBaseDepth;
+                                //Console.WriteLine(ratio);
+
+                                foreach (JointType jointType in joints.Keys)
+                                {
+                                    
+                             
+                                    Joint newJoint = joints[jointType];
+                                    var newPosition = new CameraSpacePoint
+                                    {
+                                        X = joints[jointType].Position.X * ratio,
+                                        Y = joints[jointType].Position.Y * ratio,
+                                        Z = spineBaseDepth
+                                    };
+                                    
+                                    if (newPosition.Z < 0)
+                                    {
+                                        newPosition.Z = InferredZPositionClamp;
+                                    }
+                                    newJoint.Position = newPosition;
+                                    DepthSpacePoint depthSpacePointOverlay = this.coordinateMapper.MapCameraPointToDepthSpace(newPosition);
+                                    newJointPoints[jointType] = new Point(depthSpacePointOverlay.X, depthSpacePointOverlay.Y);
+                                    //Console.WriteLine("OLD JOINT POSITIONS ***** :::: {0},{1},{2}", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
+                                    //Console.WriteLine("NEW JOINT POSITIONS ***** :::: {0},{1},{2},{3}", newJoint.Position.X, newJoint.Position.Y, newJoint.Position.Z, jointType.ToString());
+                                    jointsOverlay.Add(jointType, newJoint);
+                                }
+                               
+
+                                this.DrawBody(jointsOverlay, newJointPoints, dc, drawPenOverlay);
+                            }
+
                         }
                     }
 
