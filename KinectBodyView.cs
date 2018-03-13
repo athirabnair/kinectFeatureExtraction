@@ -378,13 +378,9 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 {
                                     // check if position was maintained for 3 seconds, then stop
                                     var elapsedTime = stopwatch.ElapsedMilliseconds;
-                                    if(elapsedTime >= 3000 || this.isCalibrated)
+                                    if(elapsedTime >= 3000)
                                     {
-                                        if (!this.isCalibrated)
-                                        {
-                                            this.isCalibrated = true;
-                                        }
-                                        if (elapsedTime <= 8000)
+                                        if (elapsedTime <= 6000)
                                         {
                                             Console.WriteLine("CALIBRATED! You may begin");
                                             FormattedText formattedText = new FormattedText(
@@ -399,6 +395,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                         else
                                         {
                                             stopwatch.Stop();
+                                            this.isCalibrated = true;
                                         }
                                         
                                     }
