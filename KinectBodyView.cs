@@ -252,6 +252,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
 
+                            Console.WriteLine("RECORDING:[}", this.isRecording);
                             // CALIBRATION 
                             if (!this.isRecording && !this.isCalibrated)
                             {
@@ -286,7 +287,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             // CALIBRATION 
                             float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
 
-                            float optimalDepth = (float)1.4;
+                            float optimalDepth = (float) 1.4;
                             // accepts depths within 10% of the optimal value
                             float leftMargin = (float) 0.9 * optimalDepth;
                             float rightMargin = (float) 1.1 * optimalDepth;
@@ -301,7 +302,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                                 if (spineBaseDepth > rightMargin)
                                 {
-                                    Console.WriteLine("NOT ALIGNED - TOO FAR");
+                                    //Console.WriteLine("NOT ALIGNED - TOO FAR");
                                     // Display the formatted text string.
 
                                     FormattedText formattedText = new FormattedText(
@@ -315,7 +316,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 }
                                 else
                                 {
-                                    Console.WriteLine("NOT ALIGNED - TOO CLOSE");
+                                    //Console.WriteLine("NOT ALIGNED - TOO CLOSE");
                                     // Display the formatted text string.
 
                                     FormattedText formattedText = new FormattedText(
@@ -377,18 +378,18 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 if (stopwatch.IsRunning)
                                 {
                                     // check if position was maintained for 3 seconds, then stop
-                                    var elapsedTicks = stopwatch.ElapsedTicks;
-                                    if(elapsedTicks >= 3.0)
+                                    var elapsedTime = stopwatch.ElapsedMilliseconds;
+                                    if(elapsedTime >= 3000)
                                     {
                                         stopwatch.Stop();
                                         Console.WriteLine("CALIBRATED! You may begin");
                                         FormattedText formattedText = new FormattedText(
-                                       "Calibrated! You may begin",
-                                       CultureInfo.GetCultureInfo("en-us"),
-                                       FlowDirection.LeftToRight,
-                                       new Typeface("Verdana"),
-                                       24,
-                                       Brushes.Aquamarine);
+                                        "Calibrated! You may begin",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        24,
+                                        Brushes.Aquamarine);
                                         dc.DrawText(formattedText, new Point(20, 20));
 
                                         this.isCalibrated = true;  
@@ -396,7 +397,17 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 }
                                 else
                                 {
-                                    stopwatch.Start();
+                                Console.WriteLine("Starting Calibration...");
+                                FormattedText formattedText = new FormattedText(
+                                "Hold still for 3 seconds.",
+                                CultureInfo.GetCultureInfo("en-us"),
+                                FlowDirection.LeftToRight,
+                                new Typeface("Verdana"),
+                                24,
+                                Brushes.Aquamarine);
+                                dc.DrawText(formattedText, new Point(20, 20));
+
+                                stopwatch.Start();
                                 }
 
                             }
