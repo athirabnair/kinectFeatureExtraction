@@ -380,7 +380,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     var elapsedTime = stopwatch.ElapsedMilliseconds;
                                     if(elapsedTime >= 3000)
                                     {
-                                        if (elapsedTime <= 6000)
+                                        if (elapsedTime <= 5000)
                                         {
                                             Console.WriteLine("CALIBRATED! You may begin");
                                             FormattedText formattedText = new FormattedText(
