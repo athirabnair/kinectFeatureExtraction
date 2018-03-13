@@ -831,8 +831,8 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
             if (dataReceived)
             {
                 // visualize the new body data
-                this.kinectBodyView.UpdateBodyFrame(this.bodies);
-
+                this.kinectBodyView.UpdateBodyFrame(this.bodies, this.startRecording);
+               
                 // we may have lost/acquired bodies, so update the corresponding gesture detectors
                 if (this.bodies != null)
                 {

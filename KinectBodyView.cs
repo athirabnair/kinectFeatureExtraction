@@ -286,7 +286,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
                             if (spineBaseDepth != 0 && (spineBaseDepth < 1.3 || spineBaseDepth > 1.5))
                             {
-                                // if it was calibrated then reset the clock
+                                // if it was almost calibrated in last frame, now reset the clock
                                 if (stopwatch.IsRunning)
                                 {
                                     stopwatch.Stop();
@@ -345,8 +345,6 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     newJoint.Position = newPosition;
                                     DepthSpacePoint depthSpacePointOverlay = this.coordinateMapper.MapCameraPointToDepthSpace(newPosition);
                                     jointPointsOverlay[jointType] = new Point(depthSpacePointOverlay.X, depthSpacePointOverlay.Y);
-                                    //Console.WriteLine("OLD JOINT POSITIONS ***** :::: {0},{1},{2}", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
-                                    //Console.WriteLine("NEW JOINT POSITIONS ***** :::: {0},{1},{2},{3}", newJoint.Position.X, newJoint.Position.Y, newJoint.Position.Z, jointType.ToString());
                                     jointsOverlay.Add(jointType, newJoint);
                                 }
 
@@ -362,7 +360,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     if(elapsedTicks > 3)
                                     {
                                         stopwatch.Stop();
-                                        Console.WriteLine('CALIBRATED! You may begin');
+                                        Console.WriteLine("CALIBRATED! You may begin");
                                         FormattedText formattedText = new FormattedText(
                                        "Calibrated! You may begin",
                                        CultureInfo.GetCultureInfo("en-us"),
