@@ -12,6 +12,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
     using System.Windows.Media;
     using Microsoft.Kinect;
     using System.Globalization;
+    using System.Diagnostics;
 
     /// <summary>
     /// Visualizes the Kinect Body stream for display in the UI
@@ -104,6 +105,21 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
         private List<Pen> bodyColors;
 
         /// <summary>
+        /// to keep track of when Kinect is recording
+        /// </summary>
+        private bool isRecording;
+
+        /// <summary>
+        /// To check if it was calibrated for 3 seconds
+        /// </summary>
+        private Stopwatch stopwatch = new Stopwatch();
+
+        /// <summary>
+        /// Save calibration status
+        /// </summary>
+        private bool isCalibrated;
+
+        /// <summary>
         /// Initializes a new instance of the KinectBodyView class
         /// </summary>
         /// <param name="kinectSensor">Active instance of the KinectSensor</param>
@@ -194,9 +210,9 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
         /// Should be called whenever a new BodyFrameArrivedEvent occurs
         /// </summary>
         /// <param name="bodies">Array of bodies to update</param>
-        public void UpdateBodyFrame(Body[] bodies)
+        public void UpdateBodyFrame(Body[] bodies, bool isRecording)
         {
-            
+            this.isRecording = isRecording;
             if (bodies != null)
             {
                 using (DrawingContext dc = this.drawingGroup.Open())
@@ -237,7 +253,10 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
 
                             // CALIBRATION 
-                            this.CalibrationCheck(bodies, dc);
+                            if (!this.isRecording && !this.isCalibrated)
+                            {
+                                this.CalibrationCheck(bodies, dc);
+                            }
                         }
                     }
 
@@ -267,6 +286,12 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
                             if (spineBaseDepth != 0 && (spineBaseDepth < 1.3 || spineBaseDepth > 1.5))
                             {
+                                // if it was calibrated then reset the clock
+                                if (stopwatch.IsRunning)
+                                {
+                                    stopwatch.Stop();
+                                }
+
                                 if (spineBaseDepth > 1.5)
                                 {
                                     Console.WriteLine("NOT ALIGNED - TOO FAR");
@@ -309,6 +334,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
 
                                     Joint newJoint = joints[jointType];
+                                    
                                     var newPosition = new CameraSpacePoint
                                     {
                                         X = joints[jointType].Position.X * scalingRatio,
@@ -327,8 +353,36 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                                 this.DrawBody(jointsOverlay, jointPointsOverlay, dc, drawPenOverlay);
                             }
+                            else
+                            {
+                                if (stopwatch.IsRunning)
+                                {
+                                    // check if position was maintained for 3 seconds, then stop
+                                    var elapsedTicks = stopwatch.ElapsedTicks;
+                                    if(elapsedTicks > 3)
+                                    {
+                                        stopwatch.Stop();
+                                        Console.WriteLine('CALIBRATED! You may begin');
+                                        FormattedText formattedText = new FormattedText(
+                                       "Calibrated! You may begin",
+                                       CultureInfo.GetCultureInfo("en-us"),
+                                       FlowDirection.LeftToRight,
+                                       new Typeface("Verdana"),
+                                       24,
+                                       Brushes.Aquamarine);
+                                        dc.DrawText(formattedText, new Point(20, 20));
+
+                                        this.isCalibrated = true;  
+                                    }
+                                }
+                                else
+                                {
+                                    stopwatch.Start();
+                                }
+
+                            }
                         }
-                    
+                                            
                 }
             }
         }
