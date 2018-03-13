@@ -251,8 +251,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
-
-                            Console.WriteLine("RECORDING:[}", this.isRecording);
+                            
                             // CALIBRATION 
                             if (!this.isRecording && !this.isCalibrated)
                             {
@@ -306,7 +305,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     // Display the formatted text string.
 
                                     FormattedText formattedText = new FormattedText(
-                                        "Not aligned. Move away from the Kinect!",
+                                        "Not aligned. Move closer to the Kinect!",
                                         CultureInfo.GetCultureInfo("en-us"),
                                         FlowDirection.LeftToRight,
                                         new Typeface("Verdana"),
@@ -320,7 +319,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     // Display the formatted text string.
 
                                     FormattedText formattedText = new FormattedText(
-                                        "Not aligned. Move closer to the Kinect!",
+                                        "Not aligned. Move away from the Kinect!",
                                         CultureInfo.GetCultureInfo("en-us"),
                                         FlowDirection.LeftToRight,
                                         new Typeface("Verdana"),
@@ -379,20 +378,29 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 {
                                     // check if position was maintained for 3 seconds, then stop
                                     var elapsedTime = stopwatch.ElapsedMilliseconds;
-                                    if(elapsedTime >= 3000)
+                                    if(elapsedTime >= 3000 || this.isCalibrated)
                                     {
-                                        stopwatch.Stop();
-                                        Console.WriteLine("CALIBRATED! You may begin");
-                                        FormattedText formattedText = new FormattedText(
-                                        "Calibrated! You may begin",
-                                        CultureInfo.GetCultureInfo("en-us"),
-                                        FlowDirection.LeftToRight,
-                                        new Typeface("Verdana"),
-                                        24,
-                                        Brushes.Aquamarine);
-                                        dc.DrawText(formattedText, new Point(20, 20));
-
-                                        this.isCalibrated = true;  
+                                        if (!this.isCalibrated)
+                                        {
+                                            this.isCalibrated = true;
+                                        }
+                                        if (elapsedTime <= 8000)
+                                        {
+                                            Console.WriteLine("CALIBRATED! You may begin");
+                                            FormattedText formattedText = new FormattedText(
+                                            "Calibrated! You may begin",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            24,
+                                            Brushes.Aquamarine);
+                                            dc.DrawText(formattedText, new Point(20, 20));
+                                        }
+                                        else
+                                        {
+                                            stopwatch.Stop();
+                                        }
+                                        
                                     }
                                 }
                                 else
