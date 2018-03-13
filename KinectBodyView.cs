@@ -268,7 +268,8 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
         /// <summary>
         /// Checks if the calibration is done for the body 
-        /// Called in the beginning before recording, and also to check if calibration is off at any point
+        /// Called when not recording
+        /// Yet to implement: check if calibration is off at any point during recording
         /// </summary>
         /// <param name="bodies">Array of bodies to update</param>
         public void CalibrationCheck(Body[] bodies, DrawingContext dc)
@@ -284,7 +285,13 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                             // CALIBRATION 
                             float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
-                            if (spineBaseDepth != 0 && (spineBaseDepth < 1.3 || spineBaseDepth > 1.5))
+
+                            float optimalDepth = (float)1.4;
+                            // accepts depths within 10% of the optimal value
+                            float leftMargin = (float) 0.9 * optimalDepth;
+                            float rightMargin = (float) 1.1 * optimalDepth;
+
+                            if (spineBaseDepth != 0 && (spineBaseDepth < leftMargin || spineBaseDepth > rightMargin ))
                             {
                                 // if it was almost calibrated in last frame, now reset the clock
                                 if (stopwatch.IsRunning)
@@ -292,7 +299,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     stopwatch.Stop();
                                 }
 
-                                if (spineBaseDepth > 1.5)
+                                if (spineBaseDepth > rightMargin)
                                 {
                                     Console.WriteLine("NOT ALIGNED - TOO FAR");
                                     // Display the formatted text string.
@@ -325,14 +332,12 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 Dictionary<JointType, Point> jointPointsOverlay = new Dictionary<JointType, Point>();
 
                                 Dictionary<JointType, Joint> jointsOverlay = new Dictionary<JointType, Joint>();
-                                float optimalDepth = (float)1.4;
+                                
                                 float scalingRatio = optimalDepth / spineBaseDepth;
                                 //Console.WriteLine(scalingRatio);
 
                                 foreach (JointType jointType in joints.Keys)
                                 {
-
-
                                     Joint newJoint = joints[jointType];
                                     
                                     var newPosition = new CameraSpacePoint
@@ -341,7 +346,23 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                         Y = joints[jointType].Position.Y * scalingRatio,
                                         Z = spineBaseDepth
                                     };
-
+                                    /*
+                                    if(jointType == JointType.HandLeft || jointType == JointType.HandRight)
+                                    {
+                                        Console.WriteLine("HAND POSITIONS: <{0},{1},{2}>",joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
+                                    }
+                                    if (jointType == JointType.ElbowLeft || jointType == JointType.ElbowRight)
+                                    {
+                                        Console.WriteLine("ELBOW POSITIONS: <{0},{1},{2}>", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
+                                    }
+                                    if(jointType == JointType.SpineShoulder)
+                                    {
+                                        Console.WriteLine("Spine shoulder POSITIONS: <{0},{1},{2}>", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
+                                    }
+                                    if (jointType == JointType.SpineMid)
+                                    {
+                                        Console.WriteLine("Spine mid POSITIONS: <{0},{1},{2}>", joints[jointType].Position.X, joints[jointType].Position.Y, joints[jointType].Position.Z);
+                                    } */
                                     newJoint.Position = newPosition;
                                     DepthSpacePoint depthSpacePointOverlay = this.coordinateMapper.MapCameraPointToDepthSpace(newPosition);
                                     jointPointsOverlay[jointType] = new Point(depthSpacePointOverlay.X, depthSpacePointOverlay.Y);
@@ -357,7 +378,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                 {
                                     // check if position was maintained for 3 seconds, then stop
                                     var elapsedTicks = stopwatch.ElapsedTicks;
-                                    if(elapsedTicks > 3)
+                                    if(elapsedTicks >= 3.0)
                                     {
                                         stopwatch.Stop();
                                         Console.WriteLine("CALIBRATED! You may begin");
