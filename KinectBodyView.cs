@@ -120,6 +120,16 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
         private bool isCalibrated;
 
         /// <summary>
+        /// Optimal Depth for Calibration
+        /// </summary>
+        float optimalDepth = (float)1.4;
+
+        /// <summary>
+        /// Optimal Height for Calibration
+        /// </summary>
+        float optimalHeight = (float)-0.44;
+
+        /// <summary>
         /// Initializes a new instance of the KinectBodyView class
         /// </summary>
         /// <param name="kinectSensor">Active instance of the KinectSensor</param>
@@ -251,11 +261,20 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+
+                            float spineBaseHeight = joints[JointType.SpineBase].Position.Y;
                             
                             // CALIBRATION 
                             if (!this.isRecording && !this.isCalibrated)
                             {
-                                this.CalibrationCheck(bodies, dc);
+                                dc.PushOpacity(0.5); 
+                                this.Calibrate(bodies, dc);
+                                dc.Pop();
+                            }
+                            else if(!this.isRecording && this.isCalibrated)
+                            {
+                                // check if calibration is off after the flag is set
+                                this.CalibrationCheck(bodies);
                             }
                         }
                     }
@@ -269,10 +288,9 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
         /// <summary>
         /// Checks if the calibration is done for the body 
         /// Called when not recording
-        /// Yet to implement: check if calibration is off at any point during recording
         /// </summary>
         /// <param name="bodies">Array of bodies to update</param>
-        public void CalibrationCheck(Body[] bodies, DrawingContext dc)
+        public void Calibrate(Body[] bodies, DrawingContext dc)
         {
             if (bodies != null)
             {
@@ -285,11 +303,18 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                             // CALIBRATION 
                             float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
+                            float spineBaseHeight = joints[JointType.SpineBase].Position.Y;
 
-                            float optimalDepth = (float) 1.4;
                             // accepts depths within 10% of the optimal value
                             float leftMargin = (float) 0.9 * optimalDepth;
                             float rightMargin = (float) 1.1 * optimalDepth;
+
+                            // accepts heights within 10% of the optimal value
+                            //negative optimal height so opposite
+                            float leftMarginHeight = (float)1.1 * optimalHeight;
+                            float rightMarginHeight = (float)0.9 * optimalHeight;
+
+                            Console.WriteLine("{0},{1},{2}", spineBaseHeight, leftMarginHeight, rightMarginHeight);
 
                             if (spineBaseDepth != 0 && (spineBaseDepth < leftMargin || spineBaseDepth > rightMargin ))
                             {
@@ -328,7 +353,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     dc.DrawText(formattedText, new Point(20, 20));
                                 }
 
-                                Pen drawPenOverlay = new Pen(Brushes.BurlyWood, 6);
+                                Pen drawPenOverlay = new Pen(Brushes.BurlyWood, 8);
                                 Dictionary<JointType, Point> jointPointsOverlay = new Dictionary<JointType, Point>();
 
                                 Dictionary<JointType, Joint> jointsOverlay = new Dictionary<JointType, Joint>();
@@ -372,7 +397,72 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                                 this.DrawBody(jointsOverlay, jointPointsOverlay, dc, drawPenOverlay);
                             }
+                        else if (spineBaseHeight != 0 && (spineBaseHeight < leftMarginHeight || spineBaseHeight > rightMarginHeight))
+                        {
+                            // if it was almost calibrated in last frame, now reset the clock
+                            if (stopwatch.IsRunning)
+                            {
+                                stopwatch.Stop();
+                            }
+
+                            if (spineBaseHeight > rightMarginHeight)
+                            {
+                                //Console.WriteLine("NOT ALIGNED - TOO FAR");
+                                // Display the formatted text string.
+
+                                FormattedText formattedText = new FormattedText(
+                                    "Not aligned. Move the Kinect down!",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    24,
+                                    Brushes.Aquamarine);
+                                dc.DrawText(formattedText, new Point(20, 20));
+                            }
                             else
+                            {
+                                //Console.WriteLine("NOT ALIGNED - TOO CLOSE");
+                                // Display the formatted text string.
+
+                                FormattedText formattedText = new FormattedText(
+                                    "Not aligned. Move the Kinect up!",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    24,
+                                    Brushes.Aquamarine);
+                                dc.DrawText(formattedText, new Point(20, 20));
+                            }
+
+                            Pen drawPenOverlay = new Pen(Brushes.BurlyWood, 8);
+                            Dictionary<JointType, Point> jointPointsOverlay = new Dictionary<JointType, Point>();
+
+                            Dictionary<JointType, Joint> jointsOverlay = new Dictionary<JointType, Joint>();
+
+                            float scalingRatio = optimalHeight / spineBaseHeight;
+                            //Console.WriteLine(scalingRatio);
+
+                            foreach (JointType jointType in joints.Keys)
+                            {
+                                Joint newJoint = joints[jointType];
+
+                                var newPosition = new CameraSpacePoint
+                                {
+                                    X = joints[jointType].Position.X ,
+                                    Y = joints[jointType].Position.Y * scalingRatio,
+                                    Z = joints[jointType].Position.Z 
+                                };
+                               
+                                newJoint.Position = newPosition;
+                                DepthSpacePoint depthSpacePointOverlay = this.coordinateMapper.MapCameraPointToDepthSpace(newPosition);
+                                jointPointsOverlay[jointType] = new Point(depthSpacePointOverlay.X, depthSpacePointOverlay.Y);
+                                jointsOverlay.Add(jointType, newJoint);
+                            }
+
+
+                            this.DrawBody(jointsOverlay, jointPointsOverlay, dc, drawPenOverlay);
+                        }
+                        else
                             {
                                 if (stopwatch.IsRunning)
                                 {
@@ -380,7 +470,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                                     var elapsedTime = stopwatch.ElapsedMilliseconds;
                                     if(elapsedTime >= 3000)
                                     {
-                                        if (elapsedTime <= 5000)
+                                        if (elapsedTime <= 7000)
                                         {
                                             Console.WriteLine("CALIBRATED! You may begin");
                                             FormattedText formattedText = new FormattedText(
@@ -418,6 +508,40 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                             }
                         }
                                             
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check if calibration is off at any point after flag is set
+        /// Called when not recording
+        /// </summary>
+        /// <param name="bodies">Array of bodies to update</param>
+        public void CalibrationCheck(Body[] bodies)
+        {
+            if (bodies != null)
+            {
+                foreach (Body body in bodies)
+                {
+                    if (body.IsTracked)
+                    {
+
+                        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+
+                        // CALIBRATION 
+                        float spineBaseDepth = joints[JointType.SpineBase].Position.Z;
+
+                      
+                        // accepts depths within 10% of the optimal value
+                        float leftMargin = (float)0.9 * optimalDepth;
+                        float rightMargin = (float)1.1 * optimalDepth;
+
+                        if (spineBaseDepth != 0 && (spineBaseDepth < leftMargin || spineBaseDepth > rightMargin))
+                        {
+                            this.isCalibrated = false;  
+                        }
+                    }
+
                 }
             }
         }
