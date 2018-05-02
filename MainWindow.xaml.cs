@@ -75,7 +75,12 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
         /// <summary> KinectBodyView object which handles drawing the Kinect bodies to a View box in the UI </summary>
         private KinectBodyView kinectBodyView = null;
+
+        /// <summary> calibration variables</summary>
+        private Boolean isCalibrated = true;
         
+        /// <summary> writeable bitmap</summary>
+        private WriteableBitmap bitmap = null;
         /// <summary> List of gesture detectors, there will be one detector created for each potential body (max of 6) </summary>
         private List<GestureDetector> gestureDetectorList = null;
 
@@ -473,10 +478,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                     gamepad = controller.GetState().Gamepad;
                     //Console.WriteLine("i am here");
                     //checkTrial();
-
-
-
-
+                    
                     if ((!paused && startMode) || scrClicked)
                     {              
                         int width = frame.FrameDescription.Width;
@@ -533,7 +535,61 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
                         frame.CopyFrameDataToArray(pixelData);
 
                         depthQueue.Enqueue(pixelData);
+                    }
+                    if (!paused && !startMode) {
+                        
+                        //for calibration
+                        if (!this.isCalibrated)
+                        {
+                          
+                            widthD = frame.FrameDescription.Width;
+                            //Console.WriteLine("!!!!!!!!!!!!!!!!!!%$^&***********************************" + widthD);
+                            heightD = frame.FrameDescription.Height;
+                            //Console.WriteLine("!!!!!!!!!!!!!!!!!!%$^&****************************HEIGHT*" + heightD);
 
+                            PixelFormat format = PixelFormats.Bgr32;
+
+                            minDepth = frame.DepthMinReliableDistance;
+                            maxDepth = frame.DepthMaxReliableDistance;
+
+                            //Console.WriteLine(" Min Depth ::::: " + minDepth);
+                            //Console.WriteLine(" Max Depth ::::: " + maxDepth);
+                            ushort[] pixelData = new ushort[widthD * heightD];
+                            //byte[] pixels = new byte[width * height * (format.BitsPerPixel + 7) / 8];
+                            dimension = widthD * heightD * (format.BitsPerPixel + 7) / 8;
+                            frame.CopyFrameDataToArray(pixelData);
+
+                            byte[] depthPixels = new byte[dimension];
+                            int colorIndex = 0;
+                            for (int depthIndex = 0; depthIndex < pixelData.Length; ++depthIndex)
+                            {
+                                ushort depth = pixelData[depthIndex];
+
+                                byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
+
+                                depthPixels[colorIndex++] = intensity; // Blue
+                                depthPixels[colorIndex++] = intensity; // Green
+                                depthPixels[colorIndex++] = intensity; // Red
+
+                                ++colorIndex;
+                            }
+
+                            if (this.bitmap == null)
+                            {
+                                this.bitmap = new WriteableBitmap(widthD, heightD, 96, 96, PixelFormats.Bgr32, null);
+                            }
+                            //pixels.CopyTo(this.bitmap.PixelBuffer);
+                            this.bitmap.WritePixels(
+                                    new Int32Rect(0, 0, this.bitmap.PixelWidth, this.bitmap.PixelHeight),
+                                        depthPixels, this.bitmap.PixelWidth * sizeof(int), 0);
+                            //this.bitmap.Invalidate();
+                            DepthFrame.Source = this.bitmap;
+                            
+                            this.isCalibrated = true;
+                            String filePathDepth = dataWritePath + "\\depthMap.txt";
+                            File.WriteAllBytes(filePathDepth, depthPixels);
+                            //CalibratedText.Text = "NOT CALIBRATED";
+                        }
                         /*
                         int colorIndex = 0;
                         for (int depthIndex = 0; depthIndex < pixelData.Length; ++depthIndex)
@@ -625,7 +681,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                     PixelFormat format = PixelFormats.Bgr32;
                     int stride = widthD * format.BitsPerPixel / 8;
-                    this.depthFrameWriter.ProcessWrite(pixels, session_number); 
+                    this.depthFrameWriter.ProcessWrite(pixels, session_number);
                 }
                 //session_number++;
             }   
@@ -1208,7 +1264,10 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
             
         }
 
-
+        private void calibration_Click(object sender, RoutedEventArgs e)
+        {
+            this.isCalibrated = false;
+        }
 
 
 

@@ -397,7 +397,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
                                 this.DrawBody(jointsOverlay, jointPointsOverlay, dc, drawPenOverlay);
                             }
-                        else if (spineBaseHeight != 0 && (spineBaseHeight < leftMarginHeight || spineBaseHeight > rightMarginHeight))
+                        /*else if (spineBaseHeight != 0 && (spineBaseHeight < leftMarginHeight || spineBaseHeight > rightMarginHeight))
                         {
                             // if it was almost calibrated in last frame, now reset the clock
                             if (stopwatch.IsRunning)
@@ -461,7 +461,7 @@ namespace Microsoft.Samples.Kinect.DiscreteGestureBasics
 
 
                             this.DrawBody(jointsOverlay, jointPointsOverlay, dc, drawPenOverlay);
-                        }
+                        }*/
                         else
                             {
                                 if (stopwatch.IsRunning)

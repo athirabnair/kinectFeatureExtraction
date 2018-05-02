@@ -70,6 +70,9 @@
                 <TextBlock Text="Stand/Sit in front of the sensor to get tracked." TextWrapping="Wrap" Margin="5 10 5 5" Foreground="{StaticResource MediumGreyBrush}" FontFamily="Segoe UI" FontSize="14"/>
                 <TextBlock Name="sign" Text="" TextWrapping="Wrap" Margin="5 10 5 5" Foreground="{StaticResource MediumGreyBrush}" FontFamily="Segoe UI" FontSize="16"/>
             </StackPanel>
+            <Button Content="Calibration&#xD;&#xA; View"  FontWeight="Bold" FontSize="22" x:Name="calibrationClick" Margin="0,175,379,10" HorizontalAlignment="Right" Width="115" Grid.Row="3" Click="calibration_Click" Grid.Column="3"/>
+            <Image x:Name="DepthFrame" Stretch="Uniform" Grid.RowSpan="4" Grid.Column="3"  Margin="150,430,20,105" />
+            <TextBlock Text="" TextWrapping="Wrap" Margin="150 150 5 100" Grid.Row="2" Grid.Column="3"  Foreground="{StaticResource MediumGreyBrush}" FontFamily="Segoe UI" FontSize="14" Name="CalibratedText" />
             <Button Content="Next&#xD;&#xA; Phrase"  FontWeight="Bold" FontSize="22" x:Name="nextPhrase" Margin="0,175,243,10" HorizontalAlignment="Right" Width="100" Grid.Row="3" Click="nextPhrase_Click" Grid.Column="3"/>
             <TextBlock Text=" ... " TextAlignment="Left" TextWrapping="Wrap" Margin="58,0,0,166" Foreground="{StaticResource MediumGreyBrush}" FontWeight="Bold" FontFamily="Segoe UI" FontSize="30" x:Name="currentPhraseName" HorizontalAlignment="Left" Width="622" Height="92" VerticalAlignment="Bottom" Grid.Row="3" Grid.ColumnSpan="4"/>
             <Image Name="phraseImage" Margin="10,242,18,10" Grid.ColumnSpan="2" Grid.RowSpan="2" Grid.Row="1" Grid.Column="1"/>
